@@ -505,19 +505,20 @@ const Directions = ({ origin, destination }: { origin?: string; destination?: st
 
     if (!routesLibrary || !map || !origin || !destination) return;
 
-    if (directionsRenderer) {
+    if (!directionsRenderer) {
+      const newDirectionsRenderer = new routesLibrary.DirectionsRenderer({
+        map,
+        suppressMarkers: true,
+      });
+      setDirectionsRenderer(newDirectionsRenderer);
+    } 
+    else {
       directionsRenderer.setMap(null);
     }
 
-    const newDirectionsRenderer = new routesLibrary.DirectionsRenderer({
-      map,
-      suppressMarkers: true,
-    });
-
     setDirectionsService(new routesLibrary.DirectionsService());
-    setDirectionsRenderer(newDirectionsRenderer);
 
-  }, [routesLibrary, map, origin, destination, directionsRenderer])
+  }, [routesLibrary, map, origin, destination])
 
   useEffect(() => {
     if (!directionsService || !directionsRenderer || !origin || !destination) return;
