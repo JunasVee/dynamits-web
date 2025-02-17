@@ -505,18 +505,17 @@ const Directions = ({ origin, destination }: { origin?: string; destination?: st
 
     if (!routesLibrary || !map || !origin || !destination) return;
 
-    if (!directionsRenderer) {
-      const newDirectionsRenderer = new routesLibrary.DirectionsRenderer({
-        map,
-        suppressMarkers: true,
-      });
-      setDirectionsRenderer(newDirectionsRenderer);
-    } 
-    else {
+    if (directionsRenderer) {
       directionsRenderer.setMap(null);
     }
 
+    const newDirectionsRenderer = new routesLibrary.DirectionsRenderer({
+      map,
+      suppressMarkers: true,
+    });
+
     setDirectionsService(new routesLibrary.DirectionsService());
+    setDirectionsRenderer(newDirectionsRenderer);
 
   }, [routesLibrary, map, origin, destination])
 
