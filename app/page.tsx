@@ -20,7 +20,7 @@ export default function Home() {
   // MARKERS
   const [markerPos, setMarkerPos] = useState<google.maps.LatLngLiteral | undefined>(undefined);
   const [destPos, setDestPos] = useState<google.maps.LatLngLiteral | undefined>(undefined);
-  const [warningNote, setWarningNote] = useState<String>("");
+  const [warningNote, setWarningNote] = useState<string>("");
 
   // SENDER DETAILS
   const [senderName, setSenderName] = useState<string>("");
@@ -517,7 +517,7 @@ const Directions = ({ origin, destination }: { origin?: string; destination?: st
     setDirectionsService(new routesLibrary.DirectionsService());
     setDirectionsRenderer(newDirectionsRenderer);
 
-  }, [routesLibrary, map, origin, destination])
+  }, [routesLibrary, map, origin, destination, directionsRenderer])
 
   useEffect(() => {
     if (!directionsService || !directionsRenderer || !origin || !destination) return;
