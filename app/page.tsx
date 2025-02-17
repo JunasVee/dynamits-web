@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { APIProvider, Map, AdvancedMarker, Pin, MapControl, ControlPosition, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
+import { APIProvider, Map, AdvancedMarker, Pin, MapControl, ControlPosition, useMap, useMapsLibrary, MapMouseEvent } from "@vis.gl/react-google-maps";
 import { useLoadScript, Autocomplete } from "@react-google-maps/api";
 import { Search, ArrowRight, Package, LocateIcon, File, MapPinHouse, MapPinCheck, User, Phone } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
@@ -20,6 +20,7 @@ export default function Home() {
   // MARKERS
   const [markerPos, setMarkerPos] = useState<google.maps.LatLngLiteral | undefined>(undefined);
   const [destPos, setDestPos] = useState<google.maps.LatLngLiteral | undefined>(undefined);
+  const [warningNote, setWarningNote] = useState<String>("");
 
   // SENDER DETAILS
   const [senderName, setSenderName] = useState<string>("");
@@ -72,11 +73,13 @@ export default function Home() {
       setMarkerPos(place.geometry.location?.toJSON());
       setPickupErr(false);
       setIsSearchClicked(true);
+      setWarningNote("")
     } else {
       setDest(place.formatted_address || "");
       setDestPos(place.geometry.location?.toJSON());
       setDestErr(false);
       setIsSearchTwoClicked(true);
+      setWarningNote("")
     }
   };
 
@@ -93,6 +96,7 @@ export default function Home() {
             setPickupErr(false);
             setIsSearchClicked(true);
             setPickup(inputPickup);
+            setWarningNote("");
           } else {
             setPickupErr(true);
             setIsSearchClicked(false);
@@ -123,6 +127,7 @@ export default function Home() {
             setDestErr(false);
             setIsSearchTwoClicked(true);
             setDest(inputDest);
+            setWarningNote("")
           } else {
             setDestErr(true);
             setIsSearchTwoClicked(false);
@@ -138,6 +143,56 @@ export default function Home() {
     }
 
   };
+
+  const handleMapClick = (e: MapMouseEvent) => {
+    const lat = e.detail.latLng?.lat
+    const lng = e.detail.latLng?.lng
+
+    if (lat === undefined || lng === undefined) {
+      return;
+    }
+
+    try {
+
+      axios.get(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.NEXT_PUBLIC_MAPS_API}`)
+        .then(function (response) {
+          const answer = response.data.results[0];
+          console.log(answer);
+
+          let newWarningNote = "";
+
+          if (activeTab === "sender") {
+            if (isSearchClicked) {
+              setPickup(answer.formatted_address);
+              setInputPickup(answer.formatted_address);
+              setMarkerPos({ lat, lng });
+            } else {
+              newWarningNote = "Please search a location from the form first!";
+            }
+          }
+  
+          if (activeTab === "receiver") {
+            if (isSearchTwoClicked) {
+              setDest(answer.formatted_address);
+              setInputDest(answer.formatted_address);
+              setDestPos({ lat, lng });
+            } else {
+              newWarningNote = "Please search a location from the form first!";
+            }
+          }
+
+          setWarningNote(newWarningNote);
+
+        })
+        .catch(function (error) {
+          console.log(error);
+        })
+
+    } catch (error) {
+      console.log(error)
+    }
+
+  }
 
   const handleGetLocation = () => {
     if (navigator.geolocation) {
@@ -194,6 +249,7 @@ export default function Home() {
             gestureHandling="greedy"
             disableDefaultUI={true}
             className="w-[20rem] h-[20rem] sm:w-[30rem] sm:h-[25rem] "
+            onClick={handleMapClick}
           >
 
             {/* My location marker */}
@@ -225,7 +281,10 @@ export default function Home() {
 
             {isSearchTwoClicked && (<Directions origin={pickup} destination={dest} />)}
 
+            <p className="text-red-500">{warningNote}</p>
+
           </Map>
+
         </APIProvider>
 
         {/* ORDER FORM */}
@@ -411,7 +470,7 @@ export default function Home() {
               <div className="flex justify-between">
                 <div className="flex flex-col gap-2">
                   <p className="font-semibold">From:</p>
-                  <p className="text-gray-900 flex items-center gap-2 text-sm"><MapPinHouse className="text-red-500" />{pickup}</p>
+                  <p className="text-gray-900 flex items-center gap-2 text-sm"><MapPinHouse className="text-red-500 shrink-0" />{pickup}</p>
                   <p className="text-gray-900 flex items-center gap-2 text-sm"><User />{senderName}</p>
                   <p className="text-gray-900 flex items-center gap-2 text-sm"><Phone className="text-green-500" />{senderNum}</p>
                 </div>
@@ -421,7 +480,7 @@ export default function Home() {
               </div>
               <div className="flex flex-col gap-2">
                 <p className="font-semibold">To:</p>
-                <p className="text-gray-900 flex items-center gap-2 text-sm"><MapPinCheck className="text-blue-500" />{dest}</p>
+                <p className="text-gray-900 flex items-center gap-2 text-sm"><MapPinCheck className="text-blue-500 shrink-0" />{dest}</p>
                 <p className="text-gray-900 flex items-center gap-2 text-sm"><User />{receiverName}</p>
                 <p className="text-gray-900 flex items-center gap-2 text-sm"><Phone className="text-green-500" />{receiverNum}</p>
               </div>
@@ -446,11 +505,17 @@ const Directions = ({ origin, destination }: { origin?: string; destination?: st
 
     if (!routesLibrary || !map || !origin || !destination) return;
 
-    setDirectionsService(new routesLibrary.DirectionsService());
-    setDirectionsRenderer(new routesLibrary.DirectionsRenderer({
+    if (directionsRenderer) {
+      directionsRenderer.setMap(null);
+    }
+
+    const newDirectionsRenderer = new routesLibrary.DirectionsRenderer({
       map,
       suppressMarkers: true,
-    }));
+    });
+
+    setDirectionsService(new routesLibrary.DirectionsService());
+    setDirectionsRenderer(newDirectionsRenderer);
 
   }, [routesLibrary, map, origin, destination])
 
@@ -459,9 +524,9 @@ const Directions = ({ origin, destination }: { origin?: string; destination?: st
 
     directionsService.route({
       origin,
-      destination,
+      destination,  
       travelMode: google.maps.TravelMode.DRIVING,
-      provideRouteAlternatives: true,
+      provideRouteAlternatives: false,
     }).then(response => {
       directionsRenderer.setDirections(response);
       const result = response.routes[0].legs[0];
