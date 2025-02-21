@@ -15,7 +15,6 @@ import axios from "axios"
 import Image from "next/image";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import HomeHeader from "@/components/HomeHeader";
-import Link from "next/link";
 
 export default function Home() {
   // MARKERS
