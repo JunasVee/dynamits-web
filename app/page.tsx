@@ -8,13 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { APIProvider, Map, AdvancedMarker, Pin, MapControl, ControlPosition, useMap, useMapsLibrary, MapMouseEvent } from "@vis.gl/react-google-maps";
 import { useLoadScript, Autocomplete } from "@react-google-maps/api";
-import { Search, ArrowRight, Package, LocateIcon, File, MapPinHouse, MapPinCheck, User, Phone } from "lucide-react";
+import { Search, ArrowRight, Package, LocateIcon, File, MapPinHouse, MapPinCheck, User, Phone, CircleHelp, Weight } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
 import axios from "axios"
 import Image from "next/image";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import HomeHeader from "@/components/HomeHeader";
+import Link from "next/link";
 
 export default function Home() {
   // MARKERS
@@ -47,6 +48,7 @@ export default function Home() {
 
   // ORDERED OR NOT
   const [isOrdered, setIsOrdered] = useState(false);
+  const orderRef = useRef<HTMLDivElement | null>(null);
 
   // ORDER DATE
   const [currentDate, setCurrentDate] = useState("")
@@ -170,7 +172,7 @@ export default function Home() {
               newWarningNote = "Please search a location from the form first!";
             }
           }
-  
+
           if (activeTab === "receiver") {
             if (isSearchTwoClicked) {
               setDest(answer.formatted_address);
@@ -240,7 +242,7 @@ export default function Home() {
       </h1>
 
       {/* ORDER */}
-      <div className="w-full flex flex-col justify-center items-center mt-10 mb-20 gap-10 lg:flex-row">
+      <div className="w-full flex flex-col justify-center items-center mt-10 mb-20 gap-10 lg:flex-row" ref={orderRef}>
         <APIProvider apiKey={process.env.NEXT_PUBLIC_MAPS_API || ""}>
           <Map
             mapId="bd607af67d5b8861"
@@ -441,7 +443,7 @@ export default function Home() {
                     });
                     setCurrentDate(formattedDate);
 
-                    setIsOrdered(!isOrdered);
+                    setIsOrdered(true);
                   }}
                 >
                   Order Now <Package />
@@ -459,7 +461,14 @@ export default function Home() {
 
         {!isOrdered && (<div className="w-full flex flex-col items-center justify-center my-10 gap-6">
           <h1 className="text-3xl text-white font-semibold">{"It's time to create your first order."}</h1>
-          <Button variant="outline">Make an Order</Button>
+          <Button variant="outline"
+            onClick={() => {
+              setTimeout(() => {
+                orderRef.current?.scrollIntoView({ behavior: "smooth" });
+              }, 100); // Small delay to ensure the DOM is ready
+            }}>
+            Make an Order
+          </Button>
         </div>)}
 
         {isOrdered && (
@@ -478,11 +487,20 @@ export default function Home() {
                   <p className="text-nowrap">{currentDate}</p>
                 </div>
               </div>
+              {/* separator line */}
+              <hr className="my-4 border-t-2 border-gray-300" />
               <div className="flex flex-col gap-2">
                 <p className="font-semibold">To:</p>
                 <p className="text-gray-900 flex items-center gap-2 text-sm"><MapPinCheck className="text-blue-500 shrink-0" />{dest}</p>
                 <p className="text-gray-900 flex items-center gap-2 text-sm"><User />{receiverName}</p>
                 <p className="text-gray-900 flex items-center gap-2 text-sm"><Phone className="text-green-500" />{receiverNum}</p>
+              </div>
+              {/* separator line */}
+              <hr className="my-4 border-t-2 border-gray-300" />
+              <div className="flex flex-col gap-2">
+                <p className="font-semibold">Package:</p>
+                <p className="text-gray-900 flex items-center gap-2 text-sm"><CircleHelp className="text-blue-500 shrink-0" />{desc}</p>
+                <p className="text-gray-900 flex items-center gap-2 text-sm"><Weight />{weight}</p>
               </div>
             </div>
           </div>
@@ -524,7 +542,7 @@ const Directions = ({ origin, destination }: { origin?: string; destination?: st
 
     directionsService.route({
       origin,
-      destination,  
+      destination,
       travelMode: google.maps.TravelMode.DRIVING,
       provideRouteAlternatives: false,
     }).then(response => {
