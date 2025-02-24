@@ -2,24 +2,61 @@
 
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { APIProvider, Map, AdvancedMarker, Pin, MapControl, ControlPosition, useMap, useMapsLibrary, MapMouseEvent } from "@vis.gl/react-google-maps";
+import {
+  APIProvider,
+  Map,
+  AdvancedMarker,
+  Pin,
+  MapControl,
+  ControlPosition,
+  useMap,
+  useMapsLibrary,
+  MapMouseEvent,
+} from "@vis.gl/react-google-maps";
 import { useLoadScript, Autocomplete } from "@react-google-maps/api";
-import { Search, ArrowRight, Package, LocateIcon, File, MapPinHouse, MapPinCheck, User, Phone, CircleHelp, Weight } from "lucide-react";
+import {
+  Search,
+  ArrowRight,
+  Package,
+  LocateIcon,
+  File,
+  MapPinHouse,
+  MapPinCheck,
+  User,
+  Phone,
+  CircleHelp,
+  Weight,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
-import axios from "axios"
+import axios from "axios";
 import Image from "next/image";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import HomeHeader from "@/components/HomeHeader";
 
 export default function Home() {
   // MARKERS
-  const [markerPos, setMarkerPos] = useState<google.maps.LatLngLiteral | undefined>(undefined);
-  const [destPos, setDestPos] = useState<google.maps.LatLngLiteral | undefined>(undefined);
+  const [markerPos, setMarkerPos] = useState<
+    google.maps.LatLngLiteral | undefined
+  >(undefined);
+  const [destPos, setDestPos] = useState<google.maps.LatLngLiteral | undefined>(
+    undefined
+  );
   const [warningNote, setWarningNote] = useState<string>("");
 
   // SENDER DETAILS
@@ -50,7 +87,7 @@ export default function Home() {
   const orderRef = useRef<HTMLDivElement | null>(null);
 
   // ORDER DATE
-  const [currentDate, setCurrentDate] = useState("")
+  const [currentDate, setCurrentDate] = useState("");
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_MAPS_API || "",
@@ -64,9 +101,11 @@ export default function Home() {
 
   console.log("is mobile", isMobile);
 
-
   const handlePlaceSelect = (type: "pickup" | "dest") => {
-    const place = type === "pickup" ? pickupRef.current?.getPlace() : destRef.current?.getPlace();
+    const place =
+      type === "pickup"
+        ? pickupRef.current?.getPlace()
+        : destRef.current?.getPlace();
     if (!place || !place.geometry) return;
 
     if (type === "pickup") {
@@ -74,23 +113,27 @@ export default function Home() {
       setMarkerPos(place.geometry.location?.toJSON());
       setPickupErr(false);
       setIsSearchClicked(true);
-      setWarningNote("")
+      setWarningNote("");
     } else {
       setDest(place.formatted_address || "");
       setDestPos(place.geometry.location?.toJSON());
       setDestErr(false);
       setIsSearchTwoClicked(true);
-      setWarningNote("")
+      setWarningNote("");
     }
   };
 
   const handleSearchClick = () => {
-
     try {
-      axios.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${inputPickup}&key=${process.env.NEXT_PUBLIC_MAPS_API}`)
+      axios
+        .get(
+          `https://maps.googleapis.com/maps/api/geocode/json?address=${inputPickup}&key=${process.env.NEXT_PUBLIC_MAPS_API}`
+        )
         .then(function (response) {
-
-          if (response.data.status === "OK" && response.data.results.length > 0) {
+          if (
+            response.data.status === "OK" &&
+            response.data.results.length > 0
+          ) {
             const answer = response.data.results[0];
             setPickup(answer.formatted_address);
             setMarkerPos(answer.geometry.location);
@@ -102,60 +145,59 @@ export default function Home() {
             setPickupErr(true);
             setIsSearchClicked(false);
           }
-
         })
         .catch(function (error) {
           console.log(error);
-
-        })
+        });
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-
-
   };
 
   const handleSearchTwoClick = () => {
-
     try {
-      axios.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${inputDest}&key=${process.env.NEXT_PUBLIC_MAPS_API}`)
+      axios
+        .get(
+          `https://maps.googleapis.com/maps/api/geocode/json?address=${inputDest}&key=${process.env.NEXT_PUBLIC_MAPS_API}`
+        )
         .then(function (response) {
-
-          if (response.data.status === "OK" && response.data.results.length > 0) {
+          if (
+            response.data.status === "OK" &&
+            response.data.results.length > 0
+          ) {
             const answer = response.data.results[0];
             setDest(answer.formatted_address);
             setDestPos(answer.geometry.location);
             setDestErr(false);
             setIsSearchTwoClicked(true);
             setDest(inputDest);
-            setWarningNote("")
+            setWarningNote("");
           } else {
             setDestErr(true);
             setIsSearchTwoClicked(false);
           }
-
         })
         .catch(function (error) {
           console.log(error);
-
-        })
+        });
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-
   };
 
   const handleMapClick = (e: MapMouseEvent) => {
-    const lat = e.detail.latLng?.lat
-    const lng = e.detail.latLng?.lng
+    const lat = e.detail.latLng?.lat;
+    const lng = e.detail.latLng?.lng;
 
     if (lat === undefined || lng === undefined) {
       return;
     }
 
     try {
-
-      axios.get(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.NEXT_PUBLIC_MAPS_API}`)
+      axios
+        .get(
+          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.NEXT_PUBLIC_MAPS_API}`
+        )
         .then(function (response) {
           const answer = response.data.results[0];
           console.log(answer);
@@ -183,17 +225,14 @@ export default function Home() {
           }
 
           setWarningNote(newWarningNote);
-
         })
         .catch(function (error) {
           console.log(error);
-        })
-
+        });
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-
-  }
+  };
 
   const handleGetLocation = () => {
     if (navigator.geolocation) {
@@ -225,7 +264,7 @@ export default function Home() {
         />
       </div>
     );
-  };
+  }
 
   return (
     <>
@@ -241,7 +280,10 @@ export default function Home() {
       </h1>
 
       {/* ORDER */}
-      <div className="w-full flex flex-col justify-center items-center mt-10 mb-20 gap-10 lg:flex-row" ref={orderRef}>
+      <div
+        className="w-full flex flex-col justify-center items-center mt-10 mb-20 gap-10 lg:flex-row"
+        ref={orderRef}
+      >
         <APIProvider apiKey={process.env.NEXT_PUBLIC_MAPS_API || ""}>
           <Map
             mapId="bd607af67d5b8861"
@@ -252,11 +294,14 @@ export default function Home() {
             className="w-[20rem] h-[20rem] sm:w-[30rem] sm:h-[25rem] "
             onClick={handleMapClick}
           >
-
             {/* My location marker */}
             {isMobile && (
               <MapControl position={ControlPosition.TOP_LEFT}>
-                <Button onClick={handleGetLocation} className="m-2 rounded-full" variant={"outline"}>
+                <Button
+                  onClick={handleGetLocation}
+                  className="m-2 rounded-full"
+                  variant={"outline"}
+                >
                   <LocateIcon />
                 </Button>
               </MapControl>
@@ -280,20 +325,31 @@ export default function Home() {
               </AdvancedMarker>
             )}
 
-            {isSearchTwoClicked && (<Directions origin={pickup} destination={dest} />)}
+            {isSearchTwoClicked && (
+              <Directions origin={pickup} destination={dest} />
+            )}
 
             <p className="text-red-500">{warningNote}</p>
-
           </Map>
-
         </APIProvider>
 
         {/* ORDER FORM */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-[20rem] sm:w-[30rem]">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="w-[20rem] sm:w-[30rem]"
+        >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="sender">Sender</TabsTrigger>
-            <TabsTrigger value="receiver" disabled={!isSearchClicked}>Receiver</TabsTrigger>
-            <TabsTrigger value="package" disabled={!isSearchClicked || !isSearchTwoClicked}>Package</TabsTrigger>
+            <TabsTrigger value="receiver" disabled={!isSearchClicked}>
+              Receiver
+            </TabsTrigger>
+            <TabsTrigger
+              value="package"
+              disabled={!isSearchClicked || !isSearchTwoClicked}
+            >
+              Package
+            </TabsTrigger>
           </TabsList>
 
           {/* SENDER TAB */}
@@ -306,22 +362,51 @@ export default function Home() {
               <CardContent className="space-y-2">
                 <div className="space-y-1">
                   <Label htmlFor="senderName">{"Sender's Name"}</Label>
-                  <Input id="senderName" value={senderName} onChange={(e) => setSenderName(e.target.value)} required />
+                  <Input
+                    id="senderName"
+                    value={senderName}
+                    onChange={(e) => setSenderName(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="senderNum">{"Sender's Number"}</Label>
-                  <Input id="senderNum" value={senderNum} onChange={(e) => setSenderNum(e.target.value)} placeholder="Ex: 08XXX" required />
+                  <Input
+                    id="senderNum"
+                    value={senderNum}
+                    onChange={(e) => setSenderNum(e.target.value)}
+                    placeholder="Ex: 08XXX"
+                    required
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="pickup">Pickup Location</Label>
                   <div className="w-full flex items-center gap-1.5">
-                    <Autocomplete className="w-full" onLoad={(autocomplete) => (pickupRef.current = autocomplete)} onPlaceChanged={() => handlePlaceSelect("pickup")}>
-                      <Input className="w-full" id="pickup" value={inputPickup} onChange={(e) => setInputPickup(e.target.value)} placeholder="Enter pickup location" />
+                    <Autocomplete
+                      className="w-full"
+                      onLoad={(autocomplete) =>
+                        (pickupRef.current = autocomplete)
+                      }
+                      onPlaceChanged={() => handlePlaceSelect("pickup")}
+                    >
+                      <Input
+                        className="w-full"
+                        id="pickup"
+                        value={inputPickup}
+                        onChange={(e) => setInputPickup(e.target.value)}
+                        placeholder="Enter pickup location"
+                      />
                     </Autocomplete>
-                    <Button onClick={handleSearchClick}><Search /></Button>
+                    <Button onClick={handleSearchClick}>
+                      <Search />
+                    </Button>
                   </div>
 
-                  {pickupErr && <p className="text-red-500 text-sm">Location not found, please try again.</p>}
+                  {pickupErr && (
+                    <p className="text-red-500 text-sm">
+                      Location not found, please try again.
+                    </p>
+                  )}
                 </div>
               </CardContent>
               <CardFooter>
@@ -331,13 +416,16 @@ export default function Home() {
                       disabled={!isSearchClicked}
                       onClick={() => setActiveTab("receiver")}
                     >
-                      Next<ArrowRight />
+                      Next
+                      <ArrowRight />
                     </Button>
                   </HoverCardTrigger>
                   {!isSearchClicked && (
                     <HoverCardContent className="w-80">
                       <div>
-                        <p className="text-sm text-red-500">Please search for a pickup location first.</p>
+                        <p className="text-sm text-red-500">
+                          Please search for a pickup location first.
+                        </p>
                       </div>
                     </HoverCardContent>
                   )}
@@ -346,33 +434,61 @@ export default function Home() {
             </Card>
           </TabsContent>
 
-
           {/* RECEIVER TAB */}
           <TabsContent value="receiver">
             <Card>
               <CardHeader>
                 <CardTitle>Receiver</CardTitle>
-                <CardDescription>Please fill in receiver details</CardDescription>
+                <CardDescription>
+                  Please fill in receiver details
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="space-y-1">
                   <Label htmlFor="receiverName">{"Receiver's Name"}</Label>
-                  <Input id="receiverName" value={receiverName} onChange={(e) => setReceiverName(e.target.value)} required />
+                  <Input
+                    id="receiverName"
+                    value={receiverName}
+                    onChange={(e) => setReceiverName(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="receiverNum">{"Receiver's Number"}</Label>
-                  <Input id="receiverNum" value={receiverNum} onChange={(e) => setReceiverNum(e.target.value)} placeholder="Ex: 08XXX" required />
+                  <Input
+                    id="receiverNum"
+                    value={receiverNum}
+                    onChange={(e) => setReceiverNum(e.target.value)}
+                    placeholder="Ex: 08XXX"
+                    required
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="dest">Destination</Label>
                   <div className="flex items-center gap-1.5">
-                    <Autocomplete className="w-full" onLoad={(autocomplete) => (destRef.current = autocomplete)} onPlaceChanged={() => handlePlaceSelect("dest")}>
-                      <Input id="dest" value={inputDest} onChange={(e) => setInputDest(e.target.value)} placeholder="Enter destination" />
+                    <Autocomplete
+                      className="w-full"
+                      onLoad={(autocomplete) =>
+                        (destRef.current = autocomplete)
+                      }
+                      onPlaceChanged={() => handlePlaceSelect("dest")}
+                    >
+                      <Input
+                        id="dest"
+                        value={inputDest}
+                        onChange={(e) => setInputDest(e.target.value)}
+                        placeholder="Enter destination"
+                      />
                     </Autocomplete>
-                    <Button onClick={handleSearchTwoClick}><Search /></Button>
-                    {destErr && <p className="text-red-500 text-sm">Location not found, please try again.</p>}
+                    <Button onClick={handleSearchTwoClick}>
+                      <Search />
+                    </Button>
+                    {destErr && (
+                      <p className="text-red-500 text-sm">
+                        Location not found, please try again.
+                      </p>
+                    )}
                   </div>
-
                 </div>
               </CardContent>
               <CardFooter>
@@ -382,13 +498,16 @@ export default function Home() {
                       disabled={!isSearchTwoClicked}
                       onClick={() => setActiveTab("package")}
                     >
-                      Next<ArrowRight />
+                      Next
+                      <ArrowRight />
                     </Button>
                   </HoverCardTrigger>
                   {!isSearchTwoClicked && (
                     <HoverCardContent className="w-80">
                       <div>
-                        <p className="text-sm text-red-500">Please search for a destination first.</p>
+                        <p className="text-sm text-red-500">
+                          Please search for a destination first.
+                        </p>
                       </div>
                     </HoverCardContent>
                   )}
@@ -398,38 +517,50 @@ export default function Home() {
           </TabsContent>
           {/* PACKAGE TAB */}
 
-
           <TabsContent value="package">
             <Card>
               <CardHeader>
                 <CardTitle>Package</CardTitle>
-                <CardDescription>Please tell us about your package!</CardDescription>
+                <CardDescription>
+                  Please tell us about your package!
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="space-y-1">
                   <Label htmlFor="receiverName">What is your package?</Label>
-                  <Input id="receiverName" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Ex: food, clothes, flowers" required />
+                  <Input
+                    id="receiverName"
+                    value={desc}
+                    onChange={(e) => setDesc(e.target.value)}
+                    placeholder="Ex: food, clothes, flowers"
+                    required
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="receiverNum">Weight (KG)</Label>
-                  <Input id="receiverNum" type="number" value={weight}
+                  <Input
+                    id="receiverNum"
+                    type="number"
+                    value={weight}
                     onChange={(e) => {
                       if (Number(parseFloat(e.target.value).toFixed(2)) > 5) {
                         setWeight("5");
-                      } else if (Number(parseFloat(e.target.value).toFixed(2)) < 0.1) {
+                      } else if (
+                        Number(parseFloat(e.target.value).toFixed(2)) < 0.1
+                      ) {
                         setWeight("0.1");
                       } else {
                         setWeight(e.target.value);
                       }
-                    }
-                    }
-                    placeholder="Max: 5 KG" required />
+                    }}
+                    placeholder="Max: 5 KG"
+                    required
+                  />
                 </div>
               </CardContent>
               <CardFooter>
                 <Button
                   onClick={() => {
-
                     const date = new Date();
                     const formattedDate = date.toLocaleDateString("en-GB", {
                       weekday: "short",
@@ -438,7 +569,7 @@ export default function Home() {
                       year: "numeric",
                       hour: "2-digit",
                       minute: "2-digit",
-                      hour12: true
+                      hour12: true,
                     });
                     setCurrentDate(formattedDate);
 
@@ -450,37 +581,53 @@ export default function Home() {
               </CardFooter>
             </Card>
           </TabsContent>
-
-
         </Tabs>
       </div>
 
       {/* ORDER RESULT */}
       <section className="bg-blue-500 flex flex-col items-start justify-center">
-
-        {!isOrdered && (<div className="w-full flex flex-col items-center justify-center my-10 gap-6">
-          <h1 className="text-3xl text-white font-semibold">{"It's time to create your first order."}</h1>
-          <Button variant="outline"
-            onClick={() => {
-              setTimeout(() => {
-                orderRef.current?.scrollIntoView({ behavior: "smooth" });
-              }, 100); // Small delay to ensure the DOM is ready
-            }}>
-            Make an Order
-          </Button>
-        </div>)}
+        {!isOrdered && (
+          <div className="w-full flex flex-col items-center justify-center my-10 gap-6">
+            <h1 className="text-3xl text-white font-semibold">
+              {"It's time to create your first order."}
+            </h1>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setTimeout(() => {
+                  orderRef.current?.scrollIntoView({ behavior: "smooth" });
+                }, 100); // Small delay to ensure the DOM is ready
+              }}
+            >
+              Make an Order
+            </Button>
+          </div>
+        )}
 
         {isOrdered && (
           <div className="w-full flex flex-col items-center justify-center my-10 gap-6">
-            <h1 className="text-3xl text-white font-semibold flex items-center gap-2">Your Order Summary <File /> </h1>
+            <h1 className="text-3xl text-white font-semibold flex items-center gap-2">
+              Your Order Summary <File />{" "}
+            </h1>
             <div className="w-[40rem] bg-white flex p-4 flex-col rounded-md gap-2">
-              <p className="text-center text-sm text-gray-800">Order ID: 12345</p>
+              <p className="text-center text-sm text-gray-800">
+                Order ID: 12345
+              </p>
               <div className="flex justify-between">
                 <div className="flex flex-col gap-2">
                   <p className="font-semibold">From:</p>
-                  <p className="text-gray-900 flex items-center gap-2 text-sm"><MapPinHouse className="text-red-500 shrink-0" />{pickup}</p>
-                  <p className="text-gray-900 flex items-center gap-2 text-sm"><User />{senderName}</p>
-                  <p className="text-gray-900 flex items-center gap-2 text-sm"><Phone className="text-green-500" />{senderNum}</p>
+                  <p className="text-gray-900 flex items-center gap-2 text-sm">
+                    <MapPinHouse className="text-red-500 shrink-0" />
+                    {pickup}
+                  </p>
+                  <p className="text-gray-900 flex items-center gap-2 text-sm">
+                    <User />
+                    {senderName}
+                  </p>
+                  <p className="text-gray-900 flex items-center gap-2 text-sm">
+                    <Phone className="text-green-500" />
+                    {senderNum}
+                  </p>
                 </div>
                 <div>
                   <p className="text-nowrap">{currentDate}</p>
@@ -490,36 +637,56 @@ export default function Home() {
               <hr className="my-4 border-t-2 border-gray-300" />
               <div className="flex flex-col gap-2">
                 <p className="font-semibold">To:</p>
-                <p className="text-gray-900 flex items-center gap-2 text-sm"><MapPinCheck className="text-blue-500 shrink-0" />{dest}</p>
-                <p className="text-gray-900 flex items-center gap-2 text-sm"><User />{receiverName}</p>
-                <p className="text-gray-900 flex items-center gap-2 text-sm"><Phone className="text-green-500" />{receiverNum}</p>
+                <p className="text-gray-900 flex items-center gap-2 text-sm">
+                  <MapPinCheck className="text-blue-500 shrink-0" />
+                  {dest}
+                </p>
+                <p className="text-gray-900 flex items-center gap-2 text-sm">
+                  <User />
+                  {receiverName}
+                </p>
+                <p className="text-gray-900 flex items-center gap-2 text-sm">
+                  <Phone className="text-green-500" />
+                  {receiverNum}
+                </p>
               </div>
               {/* separator line */}
               <hr className="my-4 border-t-2 border-gray-300" />
               <div className="flex flex-col gap-2">
                 <p className="font-semibold">Package:</p>
-                <p className="text-gray-900 flex items-center gap-2 text-sm"><CircleHelp className="text-blue-500 shrink-0" />{desc}</p>
-                <p className="text-gray-900 flex items-center gap-2 text-sm"><Weight />{weight}</p>
+                <p className="text-gray-900 flex items-center gap-2 text-sm">
+                  <CircleHelp className="text-blue-500 shrink-0" />
+                  {desc}
+                </p>
+                <p className="text-gray-900 flex items-center gap-2 text-sm">
+                  <Weight />
+                  {weight}
+                </p>
               </div>
             </div>
           </div>
         )}
-
       </section>
-
     </>
   );
 }
 
-const Directions = ({ origin, destination }: { origin?: string; destination?: string }) => {
+const Directions = ({
+  origin,
+  destination,
+}: {
+  origin?: string;
+  destination?: string;
+}) => {
   const map = useMap();
   const routesLibrary = useMapsLibrary("routes");
-  const [directionsService, setDirectionsService] = useState<google.maps.DirectionsService>();
-  const [directionsRenderer, setDirectionsRenderer] = useState<google.maps.DirectionsRenderer>();
+  const [directionsService, setDirectionsService] =
+    useState<google.maps.DirectionsService>();
+  const [directionsRenderer, setDirectionsRenderer] =
+    useState<google.maps.DirectionsRenderer>();
   const [info, setInfo] = useState({ distance: "", duration: "" });
 
   useEffect(() => {
-
     if (!routesLibrary || !map || !origin || !destination) return;
 
     if (directionsRenderer) {
@@ -533,24 +700,28 @@ const Directions = ({ origin, destination }: { origin?: string; destination?: st
 
     setDirectionsService(new routesLibrary.DirectionsService());
     setDirectionsRenderer(newDirectionsRenderer);
-
-  }, [routesLibrary, map, origin, destination])
+  }, [routesLibrary, map, origin, destination, directionsRenderer]);
 
   useEffect(() => {
-    if (!directionsService || !directionsRenderer || !origin || !destination) return;
+    if (!directionsService || !directionsRenderer || !origin || !destination)
+      return;
 
-    directionsService.route({
-      origin,
-      destination,
-      travelMode: google.maps.TravelMode.DRIVING,
-      provideRouteAlternatives: false,
-    }).then(response => {
-      directionsRenderer.setDirections(response);
-      const result = response.routes[0].legs[0];
-      console.log(response);
-      setInfo({ distance: result.distance?.text || "", duration: result.duration?.text || "" });
-
-    });
+    directionsService
+      .route({
+        origin,
+        destination,
+        travelMode: google.maps.TravelMode.DRIVING,
+        provideRouteAlternatives: false,
+      })
+      .then((response) => {
+        directionsRenderer.setDirections(response);
+        const result = response.routes[0].legs[0];
+        console.log(response);
+        setInfo({
+          distance: result.distance?.text || "",
+          duration: result.duration?.text || "",
+        });
+      });
   }, [directionsService, directionsRenderer, origin, destination]);
 
   return (
@@ -559,4 +730,4 @@ const Directions = ({ origin, destination }: { origin?: string; destination?: st
       <p>{info.duration}</p>
     </>
   );
-}
+};
