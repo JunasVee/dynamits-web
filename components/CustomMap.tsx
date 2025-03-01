@@ -1,13 +1,21 @@
 "use client";
 
-import { APIProvider, Map, MapControl, AdvancedMarker, Pin, ControlPosition } from "@vis.gl/react-google-maps";
+import {
+  APIProvider,
+  Map,
+  MapControl,
+  AdvancedMarker,
+  Pin,
+  ControlPosition,
+  MapMouseEvent as VisMapMouseEvent,
+} from "@vis.gl/react-google-maps";
 import { Button } from "@/components/ui/button";
 import Directions from "@/components/Directions";
 
 interface CustomMapProps {
   pickup?: google.maps.LatLngLiteral;
   destination?: google.maps.LatLngLiteral;
-  onMapClick?: (event: google.maps.MapMouseEvent) => void;
+  onMapClick?: (event: VisMapMouseEvent) => void;
   isMobile: boolean;
   handleGetLocation: () => void;
   markerPos?: google.maps.LatLngLiteral;
@@ -41,7 +49,11 @@ const CustomMap = ({
         {/* My location marker */}
         {isMobile && (
           <MapControl position={ControlPosition.TOP_LEFT}>
-            <Button onClick={handleGetLocation} className="m-2 rounded-full" variant={"outline"}>
+            <Button
+              onClick={handleGetLocation}
+              className="m-2 rounded-full"
+              variant={"outline"}
+            >
               📍
             </Button>
           </MapControl>
@@ -66,10 +78,19 @@ const CustomMap = ({
         )}
 
         {/* Directions */}
-        {isSearchTwoClicked && <Directions origin={pickup} destination={destination} />}
+        {isSearchTwoClicked && (
+          <Directions
+            origin={pickup ? `${pickup.lat},${pickup.lng}` : undefined}
+            destination={
+              destination ? `${destination.lat},${destination.lng}` : undefined
+            }
+          />
+        )}
 
         {/* Warning Note */}
-        {warningNote && <p className="text-red-500 absolute bottom-2 left-2">{warningNote}</p>}
+        {warningNote && (
+          <p className="text-red-500 absolute bottom-2 left-2">{warningNote}</p>
+        )}
       </Map>
     </APIProvider>
   );
