@@ -48,7 +48,6 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import HomeHeader from "@/components/HomeHeader";
-import Directions from "@/components/Directions";
 
 export default function Home() {
   // MARKERS
@@ -671,3 +670,66 @@ export default function Home() {
     </>
   );
 }
+
+const Directions = ({
+  origin,
+  destination,
+}: {
+  origin?: string;
+  destination?: string;
+}) => {
+  const map = useMap();
+  const routesLibrary = useMapsLibrary("routes");
+  const [directionsService, setDirectionsService] =
+    useState<google.maps.DirectionsService>();
+  const [directionsRenderer, setDirectionsRenderer] =
+    useState<google.maps.DirectionsRenderer>();
+  const [info, setInfo] = useState({ distance: "", duration: "" });
+
+  useEffect(() => {
+    if (!routesLibrary || !map) return;
+  
+    const newDirectionsRenderer = new routesLibrary.DirectionsRenderer({
+      map,
+      suppressMarkers: true,
+    });
+  
+    setDirectionsService(new routesLibrary.DirectionsService());
+    setDirectionsRenderer(newDirectionsRenderer);
+  
+    return () => {
+      newDirectionsRenderer.setMap(null);
+    };
+  }, [routesLibrary, map]); // ✅ Remove `origin`, `destination`, and `directionsRenderer` from dependencies
+  
+
+  useEffect(() => {
+    if (!directionsService || !directionsRenderer || !origin || !destination) return;
+  
+    directionsService
+      .route({
+        origin,
+        destination,
+        travelMode: google.maps.TravelMode.DRIVING,
+        provideRouteAlternatives: false,
+      })
+      .then((response) => {
+        directionsRenderer.setDirections(response);
+        const result = response.routes[0].legs[0];
+  
+        setInfo({
+          distance: result.distance?.text || "",
+          duration: result.duration?.text || "",
+        });
+      })
+      .catch((error) => console.error("Error fetching directions:", error));
+  }, [directionsService, directionsRenderer, origin, destination]);
+  
+
+  return (
+    <>
+      <p>{info.distance}</p>
+      <p>{info.duration}</p>
+    </>
+  );
+};
