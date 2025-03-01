@@ -1,7 +1,24 @@
+"use client";
+
 import Navbar from "@/components/Navbar";
 import React from "react";
+import { loginSchema } from "@/lib/schemas";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { Login } from "@/types/auth";
 
 const Page = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = (data: Login) => {
+    console.log(data);
+  };
   return (
     <>
       <Navbar />
@@ -13,7 +30,7 @@ const Page = () => {
               Masuk ke Akun Anda
             </h1>
 
-            <form>
+            <form onSubmit={handleSubmit(onSubmit)}>
               <div className="mb-6">
                 <label
                   htmlFor="email"
@@ -26,9 +43,14 @@ const Page = () => {
                   id="email"
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500"
                   placeholder="Masukkan email Anda"
-                  required
+                  {...register("email")}
                 />
               </div>
+              {errors.email?.message && (
+                <p className="text-red-500 text-xm -mt-5">
+                  {errors.email?.message}
+                </p>
+              )}
 
               <div className="mb-6">
                 <label
@@ -42,9 +64,14 @@ const Page = () => {
                   id="password"
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-500"
                   placeholder="Masukkan password Anda"
-                  required
+                  {...register("password")}
                 />
               </div>
+              {errors.password?.message && (
+                <p className="text-red-500 text-xm -mt-5">
+                  {errors.password?.message}
+                </p>
+              )}
 
               <button
                 type="submit"
