@@ -15,13 +15,6 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   APIProvider,
-  Map,
-  AdvancedMarker,
-  Pin,
-  MapControl,
-  ControlPosition,
-  useMap,
-  useMapsLibrary,
   MapMouseEvent,
 } from "@vis.gl/react-google-maps";
 import { useLoadScript, Autocomplete } from "@react-google-maps/api";
@@ -29,7 +22,6 @@ import {
   Search,
   ArrowRight,
   Package,
-  LocateIcon,
   File,
   MapPinHouse,
   MapPinCheck,
@@ -38,7 +30,7 @@ import {
   CircleHelp,
   Weight,
 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useMediaQuery } from "react-responsive";
 import axios from "axios";
 import Image from "next/image";
@@ -48,6 +40,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import HomeHeader from "@/components/HomeHeader";
+import CustomMap from "@/components/CustomMap";
 
 export default function Home() {
   // MARKERS
@@ -285,52 +278,17 @@ export default function Home() {
         ref={orderRef}
       >
         <APIProvider apiKey={process.env.NEXT_PUBLIC_MAPS_API || ""}>
-          <Map
-            mapId="bd607af67d5b8861"
-            defaultCenter={{ lat: -7.250445, lng: 112.768845 }}
-            defaultZoom={13}
-            gestureHandling="greedy"
-            disableDefaultUI={true}
-            className="w-[20rem] h-[20rem] sm:w-[30rem] sm:h-[25rem] "
-            onClick={handleMapClick}
-          >
-            {/* My location marker */}
-            {isMobile && (
-              <MapControl position={ControlPosition.TOP_LEFT}>
-                <Button
-                  onClick={handleGetLocation}
-                  className="m-2 rounded-full"
-                  variant={"outline"}
-                >
-                  <LocateIcon />
-                </Button>
-              </MapControl>
-            )}
-
-            {/* Pickup Marker */}
-            {markerPos && (
-              <AdvancedMarker position={markerPos}>
-                <Pin glyphColor="white" borderColor="none" background="red">
-                  A
-                </Pin>
-              </AdvancedMarker>
-            )}
-
-            {/* Destination Marker */}
-            {destPos && (
-              <AdvancedMarker position={destPos}>
-                <Pin glyphColor="white" borderColor="none" background="blue">
-                  B
-                </Pin>
-              </AdvancedMarker>
-            )}
-
-            {isSearchTwoClicked && (
-              <Directions origin={pickup} destination={dest} />
-            )}
-
-            <p className="text-red-500">{warningNote}</p>
-          </Map>
+          <CustomMap
+            isMobile={isMobile}
+            handleGetLocation={handleGetLocation}
+            isSearchTwoClicked={isSearchTwoClicked}
+            pickup={pickup}
+            destination={dest}
+            markerPos={markerPos}
+            destPos={destPos}
+            warningNote={warningNote}
+            onMapClick={handleMapClick}
+          />
         </APIProvider>
 
         {/* ORDER FORM */}
@@ -670,66 +628,3 @@ export default function Home() {
     </>
   );
 }
-
-const Directions = ({
-  origin,
-  destination,
-}: {
-  origin?: string;
-  destination?: string;
-}) => {
-  const map = useMap();
-  const routesLibrary = useMapsLibrary("routes");
-  const [directionsService, setDirectionsService] =
-    useState<google.maps.DirectionsService>();
-  const [directionsRenderer, setDirectionsRenderer] =
-    useState<google.maps.DirectionsRenderer>();
-  const [info, setInfo] = useState({ distance: "", duration: "" });
-
-  useEffect(() => {
-    if (!routesLibrary || !map) return;
-  
-    const newDirectionsRenderer = new routesLibrary.DirectionsRenderer({
-      map,
-      suppressMarkers: true,
-    });
-  
-    setDirectionsService(new routesLibrary.DirectionsService());
-    setDirectionsRenderer(newDirectionsRenderer);
-  
-    return () => {
-      newDirectionsRenderer.setMap(null);
-    };
-  }, [routesLibrary, map]); // ✅ Remove `origin`, `destination`, and `directionsRenderer` from dependencies
-  
-
-  useEffect(() => {
-    if (!directionsService || !directionsRenderer || !origin || !destination) return;
-  
-    directionsService
-      .route({
-        origin,
-        destination,
-        travelMode: google.maps.TravelMode.DRIVING,
-        provideRouteAlternatives: false,
-      })
-      .then((response) => {
-        directionsRenderer.setDirections(response);
-        const result = response.routes[0].legs[0];
-  
-        setInfo({
-          distance: result.distance?.text || "",
-          duration: result.duration?.text || "",
-        });
-      })
-      .catch((error) => console.error("Error fetching directions:", error));
-  }, [directionsService, directionsRenderer, origin, destination]);
-  
-
-  return (
-    <>
-      <p>{info.distance}</p>
-      <p>{info.duration}</p>
-    </>
-  );
-};
