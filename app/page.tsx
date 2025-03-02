@@ -178,54 +178,49 @@ export default function Home() {
     }
   };
 
-  const handleMapClick = (e: MapMouseEvent) => {
-    const lat = e.detail.latLng?.lat;
-    const lng = e.detail.latLng?.lng;
+  const handleMapClick = async (e: MapMouseEvent) => {
+    const latLng = e.detail?.latLng;
+    if (!latLng) return;
 
-    if (lat === undefined || lng === undefined) {
-      return;
-    }
+    const lat = latLng.lat;
+    const lng = latLng.lng;
 
     try {
-      axios
-        .get(
-          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.NEXT_PUBLIC_MAPS_API}`
-        )
-        .then(function (response) {
-          const answer = response.data.results[0];
-          console.log(answer);
+      const response = await axios.get(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.NEXT_PUBLIC_MAPS_API}`
+      );
 
-          let newWarningNote = "";
+      const answer = response.data.results[0];
+      console.log(answer);
 
-          if (activeTab === "sender") {
-            if (isSearchClicked) {
-              setPickup(answer.formatted_address);
-              setInputPickup(answer.formatted_address);
-              setMarkerPos({ lat, lng });
-            } else {
-              newWarningNote = "Please search a location from the form first!";
-            }
-          }
+      let newWarningNote = "";
 
-          if (activeTab === "receiver") {
-            if (isSearchTwoClicked) {
-              setDest(answer.formatted_address);
-              setInputDest(answer.formatted_address);
-              setDestPos({ lat, lng });
-            } else {
-              newWarningNote = "Please search a location from the form first!";
-            }
-          }
+      if (activeTab === "sender") {
+        if (isSearchClicked) {
+          setPickup(answer.formatted_address);
+          setInputPickup(answer.formatted_address);
+          setMarkerPos({ lat, lng });
+        } else {
+          newWarningNote = "Please search a location from the form first!";
+        }
+      }
 
-          setWarningNote(newWarningNote);
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
+      if (activeTab === "receiver") {
+        if (isSearchTwoClicked) {
+          setDest(answer.formatted_address);
+          setInputDest(answer.formatted_address);
+          setDestPos({ lat, lng });
+        } else {
+          newWarningNote = "Please search a location from the form first!";
+        }
+      }
+
+      setWarningNote(newWarningNote);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching address:", error);
     }
   };
+
 
   const handleGetLocation = () => {
     if (navigator.geolocation) {
