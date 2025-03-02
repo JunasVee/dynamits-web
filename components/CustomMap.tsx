@@ -1,13 +1,13 @@
 "use client";
 
-import { APIProvider, Map, MapControl, AdvancedMarker, Pin, ControlPosition } from "@vis.gl/react-google-maps";
+import { APIProvider, Map, MapControl, AdvancedMarker, Pin, ControlPosition, MapMouseEvent } from "@vis.gl/react-google-maps";
 import { Button } from "@/components/ui/button";
 import Directions from "@/components/Directions";
 
 interface CustomMapProps {
-  pickup?: google.maps.LatLngLiteral;
-  destination?: google.maps.LatLngLiteral;
-  onMapClick?: (event: google.maps.MapMouseEvent) => void;
+  pickup?: string;
+  destination?: string;
+  onMapClick?: (event: MapMouseEvent) => void;
   isMobile: boolean;
   handleGetLocation: () => void;
   markerPos?: google.maps.LatLngLiteral;
