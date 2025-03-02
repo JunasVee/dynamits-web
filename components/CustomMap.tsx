@@ -13,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import Directions from "@/components/Directions";
 
 interface CustomMapProps {
-  pickup?: google.maps.LatLngLiteral;
-  destination?: google.maps.LatLngLiteral;
+  pickup?: string;
+  destination?: string;
   onMapClick?: (event: VisMapMouseEvent) => void;
   isMobile: boolean;
   handleGetLocation: () => void;
@@ -80,10 +80,8 @@ const CustomMap = ({
         {/* Directions */}
         {isSearchTwoClicked && (
           <Directions
-            origin={pickup ? `${pickup.lat},${pickup.lng}` : undefined}
-            destination={
-              destination ? `${destination.lat},${destination.lng}` : undefined
-            }
+            origin={origin}
+            destination={origin}
           />
         )}
 
