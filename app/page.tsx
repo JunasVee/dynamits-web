@@ -8,13 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { APIProvider, Map, AdvancedMarker, Pin, MapControl, ControlPosition, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
 import { useLoadScript, Autocomplete } from "@react-google-maps/api";
-import { Search, ArrowRight, Package, LocateIcon, File, MapPinHouse, MapPinCheck, User, Phone } from "lucide-react";
+import { Search, ArrowRight, Package, LocateIcon, File, MapPinHouse, MapPinCheck, User, Phone, Weight } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
 import axios from "axios"
 import Image from "next/image";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import HomeHeader from "@/components/HomeHeader";
+import { toast, useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   // MARKERS
@@ -60,6 +61,8 @@ export default function Home() {
 
   const isMobile = useMediaQuery({ maxWidth: 768 });
 
+  const { toast } = useToast();
+
   console.log("is mobile", isMobile);
 
 
@@ -91,7 +94,11 @@ export default function Home() {
             setPickup(answer.formatted_address);
             setMarkerPos(answer.geometry.location);
             setPickupErr(false);
-            setIsSearchClicked(true);
+            if (senderName !== '' && senderNum !== '') {
+              setIsSearchClicked(true);
+            } else {
+              setIsSearchClicked(false);
+            }
             setPickup(inputPickup);
           } else {
             setPickupErr(true);
@@ -121,7 +128,11 @@ export default function Home() {
             setDest(answer.formatted_address);
             setDestPos(answer.geometry.location);
             setDestErr(false);
-            setIsSearchTwoClicked(true);
+            if (receiverName !== '' && receiverNum !== '') {
+              setIsSearchTwoClicked(true);
+            } else {
+              setIsSearchTwoClicked(false);
+            }
             setDest(inputDest);
           } else {
             setDestErr(true);
@@ -154,6 +165,97 @@ export default function Home() {
       alert("Geolocation is not supported by this browser.");
     }
   };
+
+  const handleSubmit = async () => {
+
+    console.log(destPos);
+
+
+    if (!receiverName || !receiverNum || !dest || !destPos?.lat || !destPos?.lng ||
+      !senderName || !senderNum || !pickup || !markerPos?.lat || !markerPos?.lng ||
+      !desc || !weight) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    const packagePrice = 4000;
+
+    // const orderData = {
+    //   receiverName,
+    //   receiverAddress: dest, // Using destination as receiver's address
+    //   receiverPhone: receiverNum,
+    //   receiverLatitude: destPos?.lat, // Ensure latitude/longitude are strings
+    //   receiverLongitude: destPos?.lng,
+    //   senderName,
+    //   senderAddress: pickup, // Using pickup as sender's address
+    //   senderPhone: senderNum,
+    //   senderLatitude: markerPos?.lat,
+    //   senderLongitude: markerPos?.lng,
+    //   packageDescription: desc,
+    //   packageWeight: parseFloat(weight),
+    //   packagePrice
+    // };
+
+    try {
+      axios.post('https://api.dynamits.id/api/v1/packages', {
+        receiverName,
+        receiverAddress: dest, // Using destination as receiver's address
+        receiverPhone: receiverNum,
+        receiverLatitude: destPos?.lat.toString(), // Ensure latitude/longitude are strings
+        receiverLongitude: destPos?.lng.toString(),
+        senderName,
+        senderAddress: pickup, // Using pickup as sender's address
+        senderPhone: senderNum,
+        senderLatitude: markerPos?.lat.toString(),
+        senderLongitude: markerPos?.lng.toString(),
+        packageDescription: desc,
+        packageWeight: parseInt(weight),
+        packagePrice
+      })
+        .then(function (response) {
+          console.log(response);
+          toast({
+            description: "Order has order has been submitted and is now waiting to assign a driver"
+          })
+        })
+        .catch(function (error) {
+          console.log(error);
+          toast({
+            title: "Order failed to submit",
+            description: "" + error.response.data.details[0].message,
+          })
+        })
+    } catch (error) {
+      console.log(error);
+      toast({
+        title: "Order failed to submit",
+        description: "" + error,
+      })
+    }
+  };
+
+
+  useEffect(() => {
+    axios.get("https://api.dynamits.id/api/v1/packages")
+      .then(function (response) {
+        console.log(response.data);
+
+      })
+  })
+
+  useEffect(() => {
+    if (senderName !== '' && senderNum !== '') {
+      setIsSearchClicked(true);
+    } else {
+      setIsSearchClicked(false);
+    }
+
+    if (receiverName !== '' && receiverNum !== '') {
+      setIsSearchTwoClicked(true);
+    } else {
+      setIsSearchTwoClicked(false);
+    }
+  }, [senderName, senderNum, receiverName, receiverNum])
 
   if (!isLoaded) {
     return (
@@ -425,6 +527,12 @@ export default function Home() {
                 <p className="text-gray-900 flex items-center gap-2 text-sm"><User />{receiverName}</p>
                 <p className="text-gray-900 flex items-center gap-2 text-sm"><Phone className="text-green-500" />{receiverNum}</p>
               </div>
+              <div className="flex flex-col gap-2">
+                <p className="font-semibold">Packages:</p>
+                <p className="text-gray-900 flex items-center gap-2 text-sm"><Package className="text-orange-900" />{desc}</p>
+                <p className="text-gray-900 flex items-center gap-2 text-sm"><Weight className="text-gray-600" />{weight}</p>
+              </div>
+              <Button variant="default" onClick={handleSubmit}>Submit Order</Button>
             </div>
           </div>
         )}
