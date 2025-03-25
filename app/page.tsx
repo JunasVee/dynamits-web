@@ -15,7 +15,7 @@ import axios from "axios"
 import Image from "next/image";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import HomeHeader from "@/components/HomeHeader";
-import { toast, useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   // MARKERS
